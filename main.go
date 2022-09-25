@@ -20,6 +20,7 @@ func main() {
 	router := gin.New()
 	configs.Logger(router)
 	router.GET("/musics", controller.GetMusics)
+	router.GET("/musics/:id", controller.GetMusic)
 	// router.POST("/musics", postMusic)
 	router.Run(":5678")
 
