@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jessie-txt/musics/configs"
@@ -30,15 +31,12 @@ func GetMusics(c *gin.Context) {
 	var music MusicOverview
 
 	client, _ := configs.MongoDb()
-	collection, err := client.Database("musics").Collection("music").Find(context.TODO(), bson.D{})
+	collection, err := configs.MongoDbCollection(client, "musics", "music").Find(context.TODO(), bson.D{})
 	err = collection.All(context.TODO(), &music)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	// log.Println(music)
-	// if err := c.BindJSON(music); err != nil {
-	// 	return
-	// }
+
 	c.JSON(http.StatusOK, &music)
 
 }
@@ -47,15 +45,37 @@ func GetMusic(c *gin.Context) {
 	var music MusicsDetail
 
 	musicId := c.Param("id")
-	// objId, _ := primitive.ObjectIDFromHex(musicId)
 	client, _ := configs.MongoDb()
-	err := client.Database("musics").Collection("music").FindOne(context.TODO(), bson.M{"id": musicId}).Decode(&music)
+
+	err := configs.MongoDbCollection(client, "musics", "music").FindOne(context.TODO(), bson.M{"id": musicId}).Decode(&music)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	// log.Println(&music)
-	// if err := c.BindJSON(music); err != nil {
-	// 	return
-	// }
 	c.JSON(http.StatusOK, &music)
+}
+
+func CreateMusic(c *gin.Context) {
+	var music MusicsDetail
+
+	timeNow := time.Now().String()
+
+	musicId := configs.Id(timeNow)
+	// log.Println(musicId)
+	c.BindJSON(&music)
+
+	newMusic := MusicsDetail{
+		Id:             musicId,
+		Singer:         music.Singer,
+		SongName:       music.SongName,
+		Album:          music.Album,
+		Release:        music.Release,
+		RecordingLabel: music.RecordingLabel,
+	}
+
+	client, _ := configs.MongoDb()
+
+	result, _ := configs.MongoDbCollection(client, "musics", "music").InsertOne(context.TODO(), newMusic)
+	// log.Println(result)
+	c.JSON(http.StatusCreated, result)
+
 }

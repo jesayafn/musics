@@ -36,3 +36,8 @@ func MongoDb() (*mongo.Client, error) {
 	return client, err
 
 }
+
+func MongoDbCollection(client *mongo.Client, database string, collectionName string) (collectionResult *mongo.Collection) {
+	collectionResult = client.Database(database).Collection(collectionName)
+	return collectionResult
+}

@@ -21,7 +21,7 @@ func main() {
 	configs.Logger(router)
 	router.GET("/musics", controller.GetMusics)
 	router.GET("/musics/:id", controller.GetMusic)
-	// router.POST("/musics", postMusic)
+	router.POST("/musics", controller.CreateMusic)
 	router.Run(":5678")
 
 }
