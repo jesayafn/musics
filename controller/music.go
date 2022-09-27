@@ -29,8 +29,29 @@ type MusicOverview []struct {
 }
 
 var (
-	timeNow     = time.Now().String()
-	client, err = configs.MongoDb()
+	timeNow       = time.Now().String()
+	client, err   = configs.MongoDb()
+	ignoreDeleted = bson.D{{Key: "$or",
+		Value: bson.A{
+			bson.D{{
+				Key: "deleted",
+				Value: bson.D{{
+					Key:   "$exists",
+					Value: false}},
+			}},
+			bson.D{{
+				Key: "deleted",
+				Value: bson.D{{
+					Key:   "$exists",
+					Value: true}, {
+					Key: "$nin",
+					Value: bson.A{
+						true,
+					},
+				}},
+			}},
+		},
+	}}
 )
 
 func GetMusics(c *gin.Context) {
@@ -38,27 +59,7 @@ func GetMusics(c *gin.Context) {
 
 	opts := mongoOptions.Find().SetProjection(bson.D{{Key: "deleted", Value: 0}})
 	collection, err := configs.MongoDbCollection(client, "musics", "music").Find(context.TODO(),
-		bson.D{{Key: "$or",
-			Value: bson.A{
-				bson.D{{
-					Key: "deleted",
-					Value: bson.D{{
-						Key:   "$exists",
-						Value: false}},
-				}},
-				bson.D{{
-					Key: "deleted",
-					Value: bson.D{{
-						Key:   "$exists",
-						Value: true}, {
-						Key: "$nin",
-						Value: bson.A{
-							true,
-						},
-					}},
-				}},
-			},
-		}}, opts)
+		ignoreDeleted, opts)
 
 	if err != nil {
 		configs.MongoDbLogger()
@@ -87,27 +88,7 @@ func GetMusic(c *gin.Context) {
 			bson.D{{
 				Key:   "id",
 				Value: musicId,
-			}}, bson.D{{Key: "$or",
-				Value: bson.A{
-					bson.D{{
-						Key: "deleted",
-						Value: bson.D{{
-							Key:   "$exists",
-							Value: false}},
-					}},
-					bson.D{{
-						Key: "deleted",
-						Value: bson.D{{
-							Key:   "$exists",
-							Value: true}, {
-							Key: "$nin",
-							Value: bson.A{
-								true,
-							},
-						}},
-					}},
-				},
-			}},
+			}}, ignoreDeleted,
 		}}}, opts).Decode(&music)
 	if err != nil {
 		c.JSON(http.StatusNotFound, "yah error, wwkkw")
@@ -156,28 +137,13 @@ func DeleteMusic(c *gin.Context) {
 			bson.D{{
 				Key:   "id",
 				Value: musicId,
-			}}, bson.D{{Key: "$or",
-				Value: bson.A{
-					bson.D{{
-						Key: "deleted",
-						Value: bson.D{{
-							Key:   "$exists",
-							Value: false}},
-					}},
-					bson.D{{
-						Key: "deleted",
-						Value: bson.D{{
-							Key:   "$exists",
-							Value: true}, {
-							Key: "$nin",
-							Value: bson.A{
-								true,
-							},
-						}},
-					}},
-				},
-			}},
-		}}}, bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}})
+			}}, ignoreDeleted,
+		}}}, bson.D{{
+		Key: "$set",
+		Value: bson.D{{
+			Key:   "deleted",
+			Value: true,
+		}}}})
 	// if result
 	if err != nil {
 		configs.MongoDbLogger()
