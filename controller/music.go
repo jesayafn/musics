@@ -27,10 +27,14 @@ type MusicOverview []struct {
 	Album    string   `json:"album"`
 }
 
+var (
+	timeNow   = time.Now().String()
+	client, _ = configs.MongoDb()
+)
+
 func GetMusics(c *gin.Context) {
 	var music MusicOverview
 
-	client, _ := configs.MongoDb()
 	collection, err := configs.MongoDbCollection(client, "musics", "music").Find(context.TODO(), bson.D{})
 	err = collection.All(context.TODO(), &music)
 	if err != nil {
@@ -45,7 +49,6 @@ func GetMusic(c *gin.Context) {
 	var music MusicsDetail
 
 	musicId := c.Param("id")
-	client, _ := configs.MongoDb()
 
 	err := configs.MongoDbCollection(client, "musics", "music").FindOne(context.TODO(), bson.M{"id": musicId}).Decode(&music)
 	if err != nil {
@@ -56,8 +59,6 @@ func GetMusic(c *gin.Context) {
 
 func CreateMusic(c *gin.Context) {
 	var music MusicsDetail
-
-	timeNow := time.Now().String()
 
 	musicId := configs.Id(timeNow)
 	// log.Println(musicId)
@@ -71,8 +72,6 @@ func CreateMusic(c *gin.Context) {
 		Release:        music.Release,
 		RecordingLabel: music.RecordingLabel,
 	}
-
-	client, _ := configs.MongoDb()
 
 	result, _ := configs.MongoDbCollection(client, "musics", "music").InsertOne(context.TODO(), newMusic)
 	// log.Println(result)
