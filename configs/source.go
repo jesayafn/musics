@@ -16,7 +16,8 @@ func DatabaseConf() (fullUriDb string, authSourceDb string, usernameDb string, p
 	return fullUriDb, authSourceDb, usernameDb, passwordUserDb
 }
 
-func RouterConf() (mode string) {
+func RouterConf() (mode string, env string) {
 	mode = os.Getenv("MODE")
-	return mode
+	env = os.Getenv("ENV_DEPLOY")
+	return mode, env
 }

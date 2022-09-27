@@ -16,12 +16,13 @@ import (
 
 func main() {
 	// configs.MongoDb()
-	configs.Mode()
+	configs.GinMode()
 	router := gin.New()
-	configs.Logger(router)
+	configs.GinLogger(router)
 	router.GET("/musics", controller.GetMusics)
 	router.GET("/musics/:id", controller.GetMusic)
 	router.POST("/musics", controller.CreateMusic)
+	router.DELETE("/musics/:id", controller.DeleteMusic)
 	router.Run(":5678")
 
 }

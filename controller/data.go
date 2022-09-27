@@ -1,4 +1,4 @@
-package configs
+package controller
 
 import (
 	"hash/fnv"
