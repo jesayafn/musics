@@ -152,3 +152,34 @@ func DeleteMusic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+func UpdateMusic(c *gin.Context) {
+	var music MusicsDetail
+
+	musicId := c.Param("id")
+
+	err := c.BindJSON(&music)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	newMusicData := bson.D{{Key: "singer", Value: music.Singer}, {Key: "songName", Value: music.SongName}, {Key: "album", Value: music.Album}, {Key: "release", Value: music.Release}, {Key: "recordingLabel", Value: music.RecordingLabel}}
+
+	result, err := configs.MongoDbCollection(client, "musics", "music").UpdateOne(context.TODO(), bson.D{{
+		Key: "$and",
+		Value: bson.A{
+			bson.D{{
+				Key:   "id",
+				Value: musicId,
+			}}, ignoreDeleted,
+		}}}, bson.D{{
+		Key:   "$set",
+		Value: newMusicData}})
+	// if result
+	if err != nil {
+		configs.MongoDbLogger()
+		log.Fatalln(err)
+	}
+
+	c.JSON(http.StatusOK, result)
+}

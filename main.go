@@ -23,6 +23,7 @@ func main() {
 	router.GET("/musics/:id", controller.GetMusic)
 	router.POST("/musics", controller.CreateMusic)
 	router.DELETE("/musics/:id", controller.DeleteMusic)
+	router.PATCH("/musics/:id", controller.UpdateMusic)
 	router.Run(":5678")
 
 }
