@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -26,6 +27,13 @@ type MusicOverview []struct {
 	Singer   []string `json:"singer"`
 	SongName string   `json:"songName"`
 	Album    string   `json:"album"`
+}
+
+type Response struct {
+	Success   string      `json:"success"`
+	Message   string      `json:"message"`
+	ErrorCode int         `json:"errorCode"`
+	Data      interface{} `json:"data"`
 }
 
 var (
@@ -56,6 +64,7 @@ var (
 
 func GetMusics(c *gin.Context) {
 	var music MusicOverview
+	// var empty MusicOverview
 
 	opts := mongoOptions.Find().SetProjection(bson.D{{Key: "deleted", Value: 0}})
 	collection, err := configs.MongoDbCollection(client, "musics", "music").Find(context.TODO(),
@@ -65,14 +74,32 @@ func GetMusics(c *gin.Context) {
 		configs.MongoDbLogger()
 		log.Fatalln(err)
 	}
-
 	err = collection.All(context.TODO(), &music)
+
 	if err != nil {
 		configs.MongoDbLogger()
-		log.Fatalln(err)
+		c.JSON(http.StatusInternalServerError, Response{
+			Success:   "false",
+			Message:   "Internal Server Error",
+			ErrorCode: 2,
+			Data:      "null",
+		})
+	} else if len(music) == 0 {
+		c.JSON(http.StatusNotFound, Response{
+			Success:   "false",
+			Message:   "Not Found",
+			ErrorCode: 1,
+			Data:      "null",
+		})
+	} else {
+		c.JSON(http.StatusOK, Response{
+			Success:   "true",
+			Message:   "Success",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"music": &music,
+			}})
 	}
-
-	c.JSON(http.StatusOK, &music)
 
 }
 
@@ -91,9 +118,20 @@ func GetMusic(c *gin.Context) {
 			}}, ignoreDeleted,
 		}}}, opts).Decode(&music)
 	if err != nil {
-		c.JSON(http.StatusNotFound, "yah error, wwkkw")
+		c.JSON(http.StatusNotFound, Response{
+			Success:   "false",
+			Message:   "Not found",
+			ErrorCode: 1,
+			Data:      "null",
+		})
 	} else {
-		c.JSON(http.StatusOK, &music)
+		c.JSON(http.StatusOK, Response{
+			Success:   "true",
+			Message:   "Success",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"music": &music,
+			}})
 	}
 }
 
@@ -105,7 +143,13 @@ func CreateMusic(c *gin.Context) {
 	err := c.BindJSON(&music)
 
 	if err != nil {
-		log.Fatalln(err)
+		c.JSON(http.StatusBadRequest, Response{
+			Success:   "false",
+			Message:   "Bad Request",
+			ErrorCode: 3,
+			Data: map[string]interface{}{
+				"error": err.Error(),
+			}})
 	}
 
 	newMusic := MusicsDetail{
@@ -120,13 +164,25 @@ func CreateMusic(c *gin.Context) {
 	result, err := configs.MongoDbCollection(client, "musics", "music").InsertOne(context.TODO(), newMusic)
 
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{
+			Success:   "false",
+			Message:   "Internal Server Error",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"error": err.Error(),
+			}})
 		configs.MongoDbLogger()
-		log.Fatalln(err)
+		log.Println(err)
+	} else {
+		c.JSON(http.StatusCreated, Response{
+			Success:   "true",
+			Message:   "Success",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"music":  &newMusic,
+				"result": result,
+			}})
 	}
-
-	// log.Println(result)
-	c.JSON(http.StatusCreated, result)
-
 }
 
 func DeleteMusic(c *gin.Context) {
@@ -145,22 +201,62 @@ func DeleteMusic(c *gin.Context) {
 			Value: true,
 		}}}})
 	// if result
+	fmt.Println(result)
 	if err != nil {
 		configs.MongoDbLogger()
-		log.Fatalln(err)
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, Response{
+			Success:   "false",
+			Message:   "Internal Server Error",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"error": err.Error(),
+			}})
+	} else if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, Response{
+			Success:   "false",
+			ErrorCode: 1,
+			Message:   "Music not found",
+			Data: map[string]interface{}{
+				"musicId": musicId,
+			}})
+		// } else if result.ModifiedCount == 0 {
+		// 	c.JSON(http.StatusBadRequest, Response{
+		// 		Success:   "false",
+		// 		ErrorCode: 3,
+		// 		Message:   "Bad Request",
+		// 		Data:      "null",
+		// 	})
+		// }
+
+	} else {
+		c.JSON(http.StatusOK, Response{
+			Success:   "true",
+			ErrorCode: 0,
+			Message:   "Success",
+			Data: map[string]interface{}{
+				"musicId": musicId,
+			}})
 	}
-
-	c.JSON(http.StatusOK, result)
 }
-
 func UpdateMusic(c *gin.Context) {
 	var music MusicsDetail
 
 	musicId := c.Param("id")
 
 	err := c.BindJSON(&music)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
 	if err != nil {
-		log.Fatalln(err)
+		c.JSON(http.StatusBadRequest, Response{
+			Success:   "false",
+			Message:   "Bad Request",
+			ErrorCode: 3,
+			Data: map[string]interface{}{
+				"error": err.Error(),
+			}})
 	}
 
 	newMusicData := bson.D{{Key: "singer", Value: music.Singer}, {Key: "songName", Value: music.SongName}, {Key: "album", Value: music.Album}, {Key: "release", Value: music.Release}, {Key: "recordingLabel", Value: music.RecordingLabel}}
@@ -176,10 +272,37 @@ func UpdateMusic(c *gin.Context) {
 		Key:   "$set",
 		Value: newMusicData}})
 	// if result
-	if err != nil {
-		configs.MongoDbLogger()
-		log.Fatalln(err)
-	}
+	// if err != nil {
+	// 	configs.MongoDbLogger()
+	// 	log.Fatalln(err)
+	// }
 
-	c.JSON(http.StatusOK, result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{
+			Success:   "false",
+			Message:   "Internal Server Error",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"error": err.Error(),
+			}})
+		configs.MongoDbLogger()
+		log.Println(err)
+	} else if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, Response{
+			Success:   "false",
+			ErrorCode: 1,
+			Message:   "Music not found",
+			Data: map[string]interface{}{
+				"musicId": musicId,
+			}})
+	} else {
+		c.JSON(http.StatusCreated, Response{
+			Success:   "true",
+			Message:   "Success",
+			ErrorCode: 0,
+			Data: map[string]interface{}{
+				"musicId": musicId,
+			}})
+	}
+	// c.JSON(http.StatusOK, result)
 }
