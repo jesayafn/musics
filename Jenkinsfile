@@ -27,7 +27,7 @@ pipeline{
             environment {
                 PROVIDER_REGISTRY = 'quay.io'
                 IMAGE_REGISTRY = 'jesayafn/musics'
-                CREDENTIALS_REGISTRY = credentials 'jesayafn@quay.io'
+                CREDENTIALS_REGISTRY = credentials 'jesayafn_cred-quay.io'
             }
             steps {
                 container('buildah') {
