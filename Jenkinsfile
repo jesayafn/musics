@@ -52,8 +52,8 @@ pipeline{
         }
         stage('Scan image') {
             environment {
-                PROVIDER_REGISTRY = quay.io
-                IMAGE_REGISTRY = jesayafn/musics
+                PROVIDER_REGISTRY = 'quay.io'
+                IMAGE_REGISTRY = 'jesayafn/musics'
             }
             steps {
                 container(trivy) {
