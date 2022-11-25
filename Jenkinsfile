@@ -49,6 +49,7 @@ pipeline{
                     }
                 }
             }
+        }
         stage('Scan image'){
             environment {
                 PROVIDER_REGISTRY = quay.io
