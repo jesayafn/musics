@@ -30,7 +30,7 @@ pipeline{
                 CREDENTIALS_REGISTRY = credentials 'jesayafn@quay.io'
             }
             steps {
-                container('buildah'){
+                container('buildah') {
                     sh '''buildah login --username ${CREDENTIALS_REGISTRY_USR} \\
                     --password ${CREDENTIALS_REGISTRY_PSW} --verbose\\
                     ${PROVIDER_REGISTRY}'''
@@ -50,13 +50,15 @@ pipeline{
                 }
             }
         }
-        stage('Scan image'){
+        stage('Scan image') {
             environment {
                 PROVIDER_REGISTRY = quay.io
                 IMAGE_REGISTRY = jesayafn/musics
             }
             steps {
-                sh 'image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                container(trivy) {
+                    sh 'image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                }
             }
         }
     }
