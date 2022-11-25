@@ -25,8 +25,8 @@ pipeline{
     stages{
         stage('Build'){
             environment {
-                PROVIDER_REGISTRY = quay.io
-                IMAGE_REGISTRY = jesayafn/musics
+                PROVIDER_REGISTRY = 'quay.io'
+                IMAGE_REGISTRY = 'jesayafn/musics'
                 CREDENTIALS_REGISTRY = credentials 'jesayafn@quay.io'
             }
             steps {
