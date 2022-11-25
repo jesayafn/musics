@@ -56,7 +56,7 @@ pipeline{
                 IMAGE_REGISTRY = 'jesayafn/musics'
             }
             steps {
-                container(trivy) {
+                container('trivy') {
                     sh 'image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
                 }
             }
