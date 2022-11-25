@@ -42,7 +42,13 @@ pipeline{
                     sh 'buildah push ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:latest'
                 }
             }
-        }
+            post {
+                always {
+                    container('buildah') {
+                        sh 'buildah logout ${PROVIDER_REGISTRY}'
+                    }
+                }
+            }
         stage('Scan image'){
             environment {
                 PROVIDER_REGISTRY = quay.io
