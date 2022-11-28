@@ -7,16 +7,13 @@ pipeline{
             kind: Pod
             spec: 
                 container:
-                - name: open-jdk
-                  image: docker.io/library/openjdk:11.0.14.1-jre
-                  command:
-                    - cat
-                  tty: true
                 - name: buildah
                   image: quay.io/buildah/stable:latest
                   command:
                     - cat
                   tty: true
+                  securityContext:
+                    privileged: true
                 - name: alpine
                   image: docker.io/library/alpine:3
                   command:
