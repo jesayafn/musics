@@ -6,7 +6,7 @@ pipeline{
             apiVersion: v1
             kind: Pod
             spec: 
-                container:
+                containers:
                 - name: buildah
                   image: quay.io/buildah/stable:latest
                   command:
@@ -34,8 +34,7 @@ pipeline{
                     sh '''buildah login --username ${CREDENTIALS_REGISTRY_USR} \\
                     --password ${CREDENTIALS_REGISTRY_PSW} --verbose\\
                     ${PROVIDER_REGISTRY}'''
-                    sh '''buildah build \\
-                    --compress --file ./Dockerfile \\
+                    sh '''buildah build --compress --file ./Dockerfile \\
                     --tag ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER} \\
                     --tag ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:latest'''
                     sh 'buildah push ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
