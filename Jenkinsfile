@@ -58,7 +58,7 @@ pipeline{
                 container('alpine') {
                     sh 'wget https://github.com/aquasecurity/trivy/releases/download/v0.35.0/trivy_0.35.0_Linux-64bit.tar.gz'
                     sh 'tar -xvzf trivy_0.35.0_Linux-64bit.tar.gz && mv trivy /bin'
-                    sh 'trivy image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                    sh 'trivy image --no-progress --output trivy-report.out ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
                 }
             }
         }
