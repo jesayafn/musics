@@ -19,8 +19,8 @@ pipeline{
                   tty: true
                   securityContext:
                     privileged: true
-                - name: trivy
-                  image: docker.io/aquasec/trivy:0.34.0
+                - name: alpine
+                  image: docker.io/library/alpine:3
                   command:
                     - cat
                   tty: true
@@ -61,8 +61,10 @@ pipeline{
                 IMAGE_REGISTRY = 'jesayafn/musics'
             }
             steps {
-                container('trivy') {
-                    sh 'image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                container('alpine') {
+                    sh 'wget https://github.com/aquasecurity/trivy/releases/download/v0.35.0/trivy_0.35.0_Linux-64bit.tar.gz'
+                    sh 'tar -xvzf trivy_0.35.0_Linux-64bit.tar.gz && mv trivy /bin'
+                    sh 'trivy image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
                 }
             }
         }
