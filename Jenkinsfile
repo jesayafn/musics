@@ -17,8 +17,6 @@ pipeline{
                   command:
                     - cat
                   tty: true
-                  securityContext:
-                    privileged: true
                 - name: alpine
                   image: docker.io/library/alpine:3
                   command:
