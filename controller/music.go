@@ -62,6 +62,10 @@ var (
 	}}
 )
 
+// func NewResponseWriter(w http.ResponseWriter) *responseWriter {
+// 	return &responseWriter{w, http.StatusOK}
+// }
+
 func GetMusics(c *gin.Context) {
 	var music MusicOverview
 	// var empty MusicOverview
@@ -100,7 +104,7 @@ func GetMusics(c *gin.Context) {
 				"music": &music,
 			}})
 	}
-
+	TotalRequests.WithLabelValues(c.FullPath()).Inc()
 }
 
 func GetMusic(c *gin.Context) {
@@ -133,6 +137,7 @@ func GetMusic(c *gin.Context) {
 				"music": &music,
 			}})
 	}
+	TotalRequests.WithLabelValues(c.FullPath()).Inc()
 }
 
 func CreateMusic(c *gin.Context) {
@@ -238,6 +243,7 @@ func DeleteMusic(c *gin.Context) {
 				"musicId": musicId,
 			}})
 	}
+	TotalRequests.WithLabelValues(c.FullPath()).Inc()
 }
 func UpdateMusic(c *gin.Context) {
 	var music MusicsDetail
@@ -259,7 +265,12 @@ func UpdateMusic(c *gin.Context) {
 			}})
 	}
 
-	newMusicData := bson.D{{Key: "singer", Value: music.Singer}, {Key: "songName", Value: music.SongName}, {Key: "album", Value: music.Album}, {Key: "release", Value: music.Release}, {Key: "recordingLabel", Value: music.RecordingLabel}}
+	newMusicData := bson.D{
+		{Key: "singer", Value: music.Singer},
+		{Key: "songName", Value: music.SongName},
+		{Key: "album", Value: music.Album},
+		{Key: "release", Value: music.Release},
+		{Key: "recordingLabel", Value: music.RecordingLabel}}
 
 	result, err := configs.MongoDbCollection(client, "musics", "music").UpdateOne(context.TODO(), bson.D{{
 		Key: "$and",
@@ -305,4 +316,5 @@ func UpdateMusic(c *gin.Context) {
 			}})
 	}
 	// c.JSON(http.StatusOK, result)
+	TotalRequests.WithLabelValues(c.FullPath()).Inc()
 }
