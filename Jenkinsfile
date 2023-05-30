@@ -6,12 +6,7 @@ pipeline{
             apiVersion: v1
             kind: Pod
             spec: 
-                container:
-                - name: open-jdk
-                  image: docker.io/library/openjdk:11.0.14.1-jre
-                  command:
-                    - cat
-                  tty: true
+                containers:
                 - name: buildah
                   image: quay.io/buildah/stable:latest
                   command:
@@ -39,8 +34,7 @@ pipeline{
                     sh '''buildah login --username ${CREDENTIALS_REGISTRY_USR} \\
                     --password ${CREDENTIALS_REGISTRY_PSW} --verbose\\
                     ${PROVIDER_REGISTRY}'''
-                    sh '''buildah build \\
-                    --compress --file ./Dockerfile \\
+                    sh '''buildah build --compress --file ./Dockerfile \\
                     --tag ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER} \\
                     --tag ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:latest'''
                     sh 'buildah push ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
@@ -64,7 +58,8 @@ pipeline{
                 container('alpine') {
                     sh 'wget https://github.com/aquasecurity/trivy/releases/download/v0.35.0/trivy_0.35.0_Linux-64bit.tar.gz'
                     sh 'tar -xvzf trivy_0.35.0_Linux-64bit.tar.gz && mv trivy /bin'
-                    sh 'trivy image ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                    sh 'trivy image --no-progress --output trivy-report.out ${PROVIDER_REGISTRY}/${IMAGE_REGISTRY}:${BUILD_NUMBER}'
+                    sh 'cat trivy-report.out'
                 }
             }
         }

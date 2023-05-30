@@ -23,6 +23,7 @@ func MongoDb() (*mongo.Client, error) {
 		Password:      passwordUserDb,
 	}
 	clientOptions := mongoOptions.Client().ApplyURI(uriDb).SetAuth(credential)
+	// fmt.Println("Ini")
 	client, err := mongo.Connect(ctx, clientOptions)
 
 	if err != nil {
